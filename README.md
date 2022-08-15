@@ -12,8 +12,12 @@ based on your existing torrents. It will only show you a list of releases name. 
 ## Tutorial
 
 1. Install uncross_seed by simply installing Python3.10
-2. Create a config.yml file in the config folder, and edit it following the config.yml.sample
-3. Run the script, happy sharing!
+2. Install the requirements using this command :
+```bash
+python -m pip install -r requirements.txt
+```
+4. Create a config.yml file in the config folder, and edit it following the config.yml.sample
+5. Run the script, happy sharing!
 
 
 ## Usage
@@ -21,6 +25,8 @@ To run the script in an interactive terminal with a list of possible commands ru
 ```bash
 python uncross_seed.py -h
 ```
+
+Note: The tool will ask your indexer manager for every torrent that are not already cross seeding. The task can be very long
 
 ## Troubleshooting
 
