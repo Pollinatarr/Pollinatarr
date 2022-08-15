@@ -12,6 +12,8 @@ based on your existing torrents. It will only show you a list of releases name. 
 ## Tutorial
 
 1. Install uncross_seed by simply installing Python3.10
+2. Create a config.yml file in the config folder, and edit it following the config.yml.sample
+3. Run the script, happy sharing!
 
 
 ## Usage
