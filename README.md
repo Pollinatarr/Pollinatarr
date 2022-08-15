@@ -16,8 +16,8 @@ based on your existing torrents. It will only show you a list of releases name. 
 ```bash
 python -m pip install -r requirements.txt
 ```
-4. Create a config.yml file in the config folder, and edit it following the config.yml.sample
-5. Run the script, happy sharing!
+3. Create a config.yml file in the config folder, and edit it following the config.yml.sample
+4. Run the script, happy sharing!
 
 
 ## Usage
