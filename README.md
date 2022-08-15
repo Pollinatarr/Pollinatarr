@@ -11,6 +11,14 @@ based on your existing torrents. It will only show you a list of releases name. 
 
 ## Tutorial
 
+1. Install uncross_seed by simply installing Python3.10
+
+
+## Usage
+To run the script in an interactive terminal with a list of possible commands run:
+```bash
+python uncross_seed.py -h
+```
 
 ## Troubleshooting
 

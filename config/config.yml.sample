@@ -1,0 +1,45 @@
+# This is an example configuration file that documents all the options.
+
+# This is the configuration for your torrent_clients. For now, only qBittorrent is supported
+torrent_clients:
+    # qBittorrent parameters
+    qbittorrent:
+       host: "http://localhost:8080"
+       user: "username"
+       pass: "password"
+
+# This is the configuration for your indexer managers. For now, only Prowlarr is supported
+indexer_managers:
+  # prowlarr parameters
+  prowlarr:
+    host: "http://localhost:9696"
+    api_key: "api_key"
+
+
+# Categories
+cat:
+  - Movies
+  - TvShow
+
+# Trackers parameters
+trackers:
+  # <Tracker URL Keyword>:    # <MANDATORY> This is the keyword in the tracker url
+  # <MANDATORY> Set prowlarr api url to this tracker.
+  #   prowlarr: <Prowlarr url>
+  # <OPTIONAL> Will limit the search on torrents in this/these category/ies. Can be a list. Can only contain categories listed in "cat" above.
+  #   categories: Movies
+  # <OPTIONAL> Will ignore this tracker for searching on tracker. The tracker will only be used for searching on torrent clients
+  #   ignore_searching: false
+  animebytes.tv:
+    indexer_managers:
+      prowlarr:
+        indexer_id: 1
+    categories: TvShow
+    ignore_searching: true
+  avistaz:
+    indexer_managers:
+      prowlarr:
+        indexer_id: 2
+    categories:
+        - Movies
+        - TvShow
