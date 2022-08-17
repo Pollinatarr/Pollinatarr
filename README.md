@@ -1,4 +1,4 @@
-# Pollinatarr: Find your Pollinatarr torrents
+# Pollinatarr: Spread your torrents to the world
 
 `Pollinatarr` is an app designed to help you find which torrents are not available on certain trackers
 based on your existing torrents. It will only show you a list of releases name. You will have to upload torrents yourself.
