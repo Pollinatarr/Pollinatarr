@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from uncross_seed.indexer_manager.prowlarr import ProwlarrClient
-from uncross_seed.logger.log import logger
+from pollinatarr.indexer_manager.prowlarr import ProwlarrClient
+from pollinatarr.logger.log import logger
 
 if TYPE_CHECKING:
-    from uncross_seed.config.config import Config
-    from uncross_seed.indexer_manager.abstract_indexer_manager import AbstractIndexerManager
+    from pollinatarr.config.config import Config
+    from pollinatarr.indexer_manager.abstract_indexer_manager import AbstractIndexerManager
 
 INDEXER_MANAGER_CLIENT_MAPPING = {
     "prowlarr": ProwlarrClient

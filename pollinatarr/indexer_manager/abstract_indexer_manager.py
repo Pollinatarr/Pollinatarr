@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from uncross_seed.config.indexer_managers_client_config import IndexerManagerClientConfig
+from pollinatarr.config.indexer_managers_client_config import IndexerManagerClientConfig
 
 if TYPE_CHECKING:
     pass

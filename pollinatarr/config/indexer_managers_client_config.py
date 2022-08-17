@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from uncross_seed.config.utils import get_property_from_dict
-from uncross_seed.logger.log import logger
+from pollinatarr.config.utils import get_property_from_dict
+from pollinatarr.logger.log import logger
 
 if TYPE_CHECKING:
     pass

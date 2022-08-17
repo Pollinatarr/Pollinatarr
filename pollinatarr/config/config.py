@@ -8,10 +8,10 @@ from typing import TYPE_CHECKING
 
 import yaml
 
-from uncross_seed.config.indexer_managers_client_config import IndexerManagerClientConfig, ProwlarrClientConfig, UnknownIndexerManager
-from uncross_seed.config.torrent_clients_config import TorrentClientConfig, qBittorrentClientConfig, UnknownTorrentClient
-from uncross_seed.config.utils import DEFAULT_CONFIG_DIR_PATH, DEFAULT_CONFIG_FILE_NAME, BadConfigPathException, get_property_from_dict
-from uncross_seed.logger.log import logger
+from pollinatarr.config.indexer_managers_client_config import IndexerManagerClientConfig, ProwlarrClientConfig, UnknownIndexerManager
+from pollinatarr.config.torrent_clients_config import TorrentClientConfig, qBittorrentClientConfig, UnknownTorrentClient
+from pollinatarr.config.utils import DEFAULT_CONFIG_DIR_PATH, DEFAULT_CONFIG_FILE_NAME, BadConfigPathException, get_property_from_dict
+from pollinatarr.logger.log import logger
 
 if TYPE_CHECKING:
     from typing import Optional

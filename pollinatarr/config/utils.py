@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
-from uncross_seed.logger.log import logger
+from pollinatarr.logger.log import logger
 
 if TYPE_CHECKING:
     pass

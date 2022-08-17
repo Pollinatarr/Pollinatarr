@@ -14,7 +14,7 @@ import colorlog as colorlog
 if TYPE_CHECKING:
     pass
 
-logger: logging.Logger = logging.getLogger('uncross_seed')
+logger: logging.Logger = logging.getLogger('Pollinatarr')
 
 DEFAULT_LOG_DIR = "logs"
 

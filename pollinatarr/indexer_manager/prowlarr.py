@@ -8,10 +8,10 @@ from urllib.parse import urlencode
 
 import requests
 
-from uncross_seed.indexer_manager.abstract_indexer_manager import AbstractIndexerManager
+from pollinatarr.indexer_manager.abstract_indexer_manager import AbstractIndexerManager
 
 if TYPE_CHECKING:
-    from uncross_seed.config.indexer_managers_client_config import ProwlarrClientConfig
+    from pollinatarr.config.indexer_managers_client_config import ProwlarrClientConfig
 
 
 class ProwlarrClient(AbstractIndexerManager):

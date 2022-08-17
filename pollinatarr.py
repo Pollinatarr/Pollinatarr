@@ -7,13 +7,13 @@ import os
 import time
 from typing import TYPE_CHECKING
 
-from uncross_seed.config.config import Config
-from uncross_seed.indexer_manager.abstract_indexer_manager import AbstractIndexerManager
-from uncross_seed.indexer_manager.indexer_manager_factory import create_indexer_manager_clients_from_config
-from uncross_seed.logger.log import setup_logger, logger
-from uncross_seed.torrent_clients.abstract_torrent_client import AbstractTorrentClient
-from uncross_seed.torrent_clients.torrent_client_factory import create_torrents_client_from_config
-from uncross_seed.utils.display import display_uncross_seed_torrents_in_beautiful_table
+from pollinatarr.config.config import Config
+from pollinatarr.indexer_manager.abstract_indexer_manager import AbstractIndexerManager
+from pollinatarr.indexer_manager.indexer_manager_factory import create_indexer_manager_clients_from_config
+from pollinatarr.logger.log import setup_logger, logger
+from pollinatarr.torrent_clients.abstract_torrent_client import AbstractTorrentClient
+from pollinatarr.torrent_clients.torrent_client_factory import create_torrents_client_from_config
+from pollinatarr.utils.display import display_torrents_per_trackers_in_beautiful_table
 
 if TYPE_CHECKING:
     pass
@@ -33,11 +33,11 @@ def write_file_result(torrents: dict[str, dict[str, list[str]]], result_path: st
 
 
 def search_torrents_with_indexer_manager(torrents: dict[str, dict[str, list[str]]], config: Config, indexer_manager_clients: dict[str, AbstractIndexerManager]) -> dict[str, dict[str, list[str]]]:
-    uncross_seed_torrents = {}
+    torrents_per_trackers = {}
     torrents_nb = 0
     for _cat_name, _cat in torrents.items():
         logger.info(f"Searching torrents in category {_cat_name}")
-        uncross_seed_torrents[_cat_name] = {}
+        torrents_per_trackers[_cat_name] = {}
         _trackers_with_this_cat = [(tracker_name, tracker) for tracker_name, tracker in config.trackers.items() if _cat_name in tracker.categories]
         for torrent_name, trackers in _cat.items():
             torrent_name = torrent_name.strip(".mkv")
@@ -53,16 +53,16 @@ def search_torrents_with_indexer_manager(torrents: dict[str, dict[str, list[str]
                     else:
                         logger.debug(f"{torrent_name} not found on tracker {tracker_name} with indexer manager {indexer_manager_wanted}")
                 else:
-                    if torrent_name in uncross_seed_torrents[_cat_name]:
-                        uncross_seed_torrents[_cat_name][torrent_name].append(tracker_name)
+                    if torrent_name in torrents_per_trackers[_cat_name]:
+                        torrents_per_trackers[_cat_name][torrent_name].append(tracker_name)
                     else:
-                        uncross_seed_torrents[_cat_name][torrent_name] = [tracker_name]
-        nb_per_category = len(uncross_seed_torrents[_cat_name])
+                        torrents_per_trackers[_cat_name][torrent_name] = [tracker_name]
+        nb_per_category = len(torrents_per_trackers[_cat_name])
         torrents_nb += nb_per_category
         logger.info(f"All torrents from category {_cat_name} have been searched")
         logger.info(f"There are {nb_per_category} torrents in the {_cat_name} category that you can upload on other trackers")
     logger.info(f"There are {torrents_nb} torrents you can upload on other trackers")
-    return uncross_seed_torrents
+    return torrents_per_trackers
 
 
 def remove_torrents_already_cross_seeded(torrents: dict[str, dict[str, list[str]]], config: Config):
@@ -136,12 +136,12 @@ if __name__ == '__main__':
         logger.info(f"Filtering torrents took {time.time() - start_time} seconds")
     
         start_time = time.time()
-        _uncross_seed_torrents = search_torrents_with_indexer_manager(_torrents, _config, _indexer_manager_clients)
+        _torrents_to_pollinate = search_torrents_with_indexer_manager(_torrents, _config, _indexer_manager_clients)
         logger.info(f"Searching torrents through indexer manager took {time.time() - start_time} seconds")
     
-        write_file_result(_uncross_seed_torrents, _result_path)
+        write_file_result(_torrents_to_pollinate, _result_path)
     else:
         with open(_result_path, "r") as f:
-            _uncross_seed_torrents = json.load(f)
+            _torrents_to_pollinate = json.load(f)
             
-    display_uncross_seed_torrents_in_beautiful_table(_uncross_seed_torrents)
+    display_torrents_per_trackers_in_beautiful_table(_torrents_to_pollinate)

@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from uncross_seed.logger.log import logger
-from uncross_seed.torrent_clients.qbitorrent_client import qBittorrentClient
+from pollinatarr.logger.log import logger
+from pollinatarr.torrent_clients.qbitorrent_client import qBittorrentClient
 
 if TYPE_CHECKING:
-    from uncross_seed.config.config import Config
-    from uncross_seed.torrent_clients.abstract_torrent_client import AbstractTorrentClient
+    from pollinatarr.config.config import Config
+    from pollinatarr.torrent_clients.abstract_torrent_client import AbstractTorrentClient
 
 TORRENT_CLIENT_MAPPING = {
     "qbittorrent": qBittorrentClient

@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING
 import qbittorrentapi
 from qbittorrentapi import Client, LoginFailed, APIConnectionError
 
-from uncross_seed.config.torrent_clients_config import qBittorrentClientConfig
-from uncross_seed.logger.log import logger
-from uncross_seed.torrent_clients.abstract_torrent_client import AbstractTorrentClient, FailedToConnect
+from pollinatarr.config.torrent_clients_config import qBittorrentClientConfig
+from pollinatarr.logger.log import logger
+from pollinatarr.torrent_clients.abstract_torrent_client import AbstractTorrentClient, FailedToConnect
 
 if TYPE_CHECKING:
     pass

@@ -5,11 +5,11 @@ from __future__ import annotations
 from abc import ABCMeta
 from typing import TYPE_CHECKING
 
-from uncross_seed.logger.log import logger
+from pollinatarr.logger.log import logger
 
 if TYPE_CHECKING:
-    from uncross_seed.config.config import Config
-    from uncross_seed.config.torrent_clients_config import TorrentClientConfig
+    from pollinatarr.config.config import Config
+    from pollinatarr.config.torrent_clients_config import TorrentClientConfig
 
 
 class FailedToConnect(Exception):
