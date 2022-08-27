@@ -23,7 +23,8 @@ class TorrentClientConfig(object):
     
     @staticmethod
     def from_dict(client_name: str, _dict: dict):
-        logger.info(f"\t\tLoading torrent client {client_name} configuration")
+        reading_config_logger = logger.get_sub("CONFIG")
+        reading_config_logger.info(f"\t\tLoading torrent client {client_name} configuration")
 
 
 class qBittorrentClientConfig(TorrentClientConfig):
@@ -41,4 +42,23 @@ class qBittorrentClientConfig(TorrentClientConfig):
         config.host = get_property_from_dict(_dict, "host", mandatory=True, depth=2)
         config.username = get_property_from_dict(_dict, "username", mandatory=True, depth=2)
         config.password = get_property_from_dict(_dict, "password", mandatory=True, depth=2)
+        return config
+
+
+class rTorrentClientConfig(TorrentClientConfig):
+    def __init__(self):
+        super().__init__()
+        self.host = None
+        self.username = None
+        self.password = None
+        self.auth = False
+    
+    @staticmethod
+    def from_dict(client_name: str, _dict: dict) -> rTorrentClientConfig:
+        TorrentClientConfig.from_dict(client_name, _dict)
+        config = rTorrentClientConfig()
+        config.host = get_property_from_dict(_dict, "host", mandatory=True, depth=2)
+        config.username = get_property_from_dict(_dict, "username", mandatory=True, depth=2)
+        config.password = get_property_from_dict(_dict, "password", mandatory=True, depth=2)
+        config.auth = get_property_from_dict(_dict, "auth", mandatory=True, depth=2)
         return config

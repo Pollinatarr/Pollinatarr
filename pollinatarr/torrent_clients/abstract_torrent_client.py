@@ -6,6 +6,7 @@ from abc import ABCMeta
 from typing import TYPE_CHECKING
 
 from pollinatarr.logger.log import logger
+from pollinatarr.torrents.torrent_container import TorrentContainer
 
 if TYPE_CHECKING:
     from pollinatarr.config.config import Config
@@ -17,27 +18,23 @@ class FailedToConnect(Exception):
 
 
 class AbstractTorrentClient(object, metaclass=ABCMeta):
-    def __init__(self, config: TorrentClientConfig):
-        pass
+    def __init__(self, config: TorrentClientConfig, name: str):
+        self.name = name
+        self.config = config
+        self.logger = logger.get_sub("TORRENT CLIENT").get_sub(name)
     
-    def get_torrents_using_config(self, config: Config) -> dict:
-        torrents_per_category = {_category_name: {} for _category_name in config.categories}
+    
+    def get_torrents_using_config(self, config: Config) -> TorrentContainer:
+        torrents = TorrentContainer()
         for _tracker_name, _tracker_config in config.trackers.items():
             categories = _tracker_config.categories or config.categories
             for category in categories:
-                logger.info(f"Searching torrents that match {category} category and {_tracker_name} tracker")
-                _torrents = self.get_torrents_name_from_tracker(_tracker_name, category)
-                logger.info(f"Found {len(_torrents)} torrents")
-                for _torrent in _torrents:
-                    if _torrent in torrents_per_category[category]:
-                        torrents_per_category[category][_torrent].append(_tracker_name)
-                    else:
-                        torrents_per_category[category][_torrent] = [_tracker_name]
-        return torrents_per_category
-
+                self.logger.info(f"Searching torrents that match {category} category and {_tracker_name} tracker")
+                _torrents = self.get_torrents_from_tracker(_tracker_name, category)
+                self.logger.info(f"Found {len(_torrents)} torrents")
+                torrents.merge(_torrents)
+        return torrents
     
-    def get_torrents_from_tracker(self, tracker_name: str, category: str) -> list:
-        raise NotImplementedError
-        
-    def get_torrents_name_from_tracker(self, tracker_name: str, category: str) -> list:
+    
+    def get_torrents_from_tracker(self, tracker_name: str, category: str) -> TorrentContainer:
         raise NotImplementedError

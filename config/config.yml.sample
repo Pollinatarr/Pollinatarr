@@ -1,12 +1,17 @@
 # This is an example configuration file that documents all the options.
 
-# This is the configuration for your torrent_clients. For now, only qBittorrent is supported
+# This is the configuration for your torrent_clients. For now, only qBittorrent adn rTorrent is supported
 torrent_clients:
     # qBittorrent parameters
     qbittorrent:
        host: "http://localhost:8080"
        username: "username"
        password: "password"
+    rTorrent:
+       host: "http://localhost:8080"
+       username: "username"
+       password: "password"
+       auth: false
 
 # This is the configuration for your indexer managers. For now, only Prowlarr is supported
 indexer_managers:
@@ -17,6 +22,7 @@ indexer_managers:
 
 
 # Categories
+# Note: Not all torrent client use the term "categories". For example in rTorrent, it will be label
 categories:
   - Movies
   - TvShow

@@ -10,9 +10,11 @@ from typing import TYPE_CHECKING
 from pollinatarr.config.config import Config
 from pollinatarr.indexer_manager.abstract_indexer_manager import AbstractIndexerManager
 from pollinatarr.indexer_manager.indexer_manager_factory import create_indexer_manager_clients_from_config
-from pollinatarr.logger.log import setup_logger, logger
+from pollinatarr.logger.log import setup_logger, logger, SubLogger
 from pollinatarr.torrent_clients.abstract_torrent_client import AbstractTorrentClient
 from pollinatarr.torrent_clients.torrent_client_factory import create_torrents_client_from_config
+from pollinatarr.torrents.torrent import Torrent
+from pollinatarr.torrents.torrent_container import TorrentContainer
 from pollinatarr.utils.display import display_torrents_per_trackers_in_beautiful_table
 
 if TYPE_CHECKING:
@@ -25,69 +27,67 @@ DEFAULT_RESULT_DIR_PATH = "result"
 DEFAULT_RESULT_FILE_NAME = "result.json"
 
 
-def write_file_result(torrents: dict[str, dict[str, list[str]]], result_path: str):
+def write_file_result(torrents: TorrentContainer, result_path: str):
     logger.info(f"Writing result on {result_path}")
     with open(result_path, "w+") as f:
-        f.write(json.dumps(torrents))
+        f.write(json.dumps(torrents.to_dict()))
     logger.info(f"Result correctly saved")
 
 
-def search_torrents_with_indexer_manager(torrents: dict[str, dict[str, list[str]]], config: Config, indexer_manager_clients: dict[str, AbstractIndexerManager]) -> dict[str, dict[str, list[str]]]:
-    torrents_per_trackers = {}
+def search_torrents_with_indexer_manager(torrents: TorrentContainer, config: Config, indexer_manager_clients: dict[str, AbstractIndexerManager], searching_logger: SubLogger) -> TorrentContainer:
+    torrents_to_cross_seed = TorrentContainer()
     torrents_nb = 0
-    for _cat_name, _cat in torrents.items():
-        logger.info(f"Searching torrents in category {_cat_name}")
-        torrents_per_trackers[_cat_name] = {}
+    for _cat_name in config.categories:
+        searching_logger.info(f"Searching torrents in category {_cat_name}")
         _trackers_with_this_cat = [(tracker_name, tracker) for tracker_name, tracker in config.trackers.items() if _cat_name in tracker.categories]
-        for torrent_name, trackers in _cat.items():
-            torrent_name = torrent_name.strip(".mkv")
-            tracker_to_search_on = [tracker_tuple for tracker_tuple in _trackers_with_this_cat if tracker_tuple[0] not in trackers and not tracker_tuple[1].ignore_searching]
+        _torrents_by_cat = torrents.find_torrents_with_category(_cat_name)
+        for torrent in _torrents_by_cat:
+            torrent_name = torrent.torrent_name.strip(".mkv")
+            tracker_to_search_on = [tracker_tuple for tracker_tuple in _trackers_with_this_cat if tracker_tuple[0] not in torrent.trackers and not tracker_tuple[1].ignore_searching]
             for tracker in tracker_to_search_on:
                 tracker_name = tracker[0]
                 for indexer_manager_wanted, _opts in tracker[1].indexers.items():
-                    logger.debug(f"Searching {torrent_name} for tracker {tracker_name} with indexer manager {indexer_manager_wanted}")
+                    searching_logger.debug(f"Searching {torrent_name} for tracker {tracker_name} with indexer manager {indexer_manager_wanted}")
                     torrent_found = bool(next((_t for _t in indexer_manager_clients[indexer_manager_wanted].search_by_name(torrent_name, **_opts) if _t.get("title", "") == torrent_name), None))
                     if torrent_found:
-                        logger.debug(f"{torrent_name} found on tracker {tracker_name} with indexer manager {indexer_manager_wanted}")
+                        searching_logger.debug(f"{torrent_name} found on tracker {tracker_name} with indexer manager {indexer_manager_wanted}")
                         break
                     else:
-                        logger.debug(f"{torrent_name} not found on tracker {tracker_name} with indexer manager {indexer_manager_wanted}")
+                        searching_logger.debug(f"{torrent_name} not found on tracker {tracker_name} with indexer manager {indexer_manager_wanted}")
                 else:
-                    if torrent_name in torrents_per_trackers[_cat_name]:
-                        torrents_per_trackers[_cat_name][torrent_name].append(tracker_name)
+                    existing_torrent = torrents_to_cross_seed.find_torrent_by_name(torrent.torrent_name)
+                    if existing_torrent:
+                        existing_torrent.add_tracker(tracker_name)
                     else:
-                        torrents_per_trackers[_cat_name][torrent_name] = [tracker_name]
-        nb_per_category = len(torrents_per_trackers[_cat_name])
+                        torrent = Torrent(torrent_name, _cat_name)
+                        torrent.add_tracker(tracker_name)
+                        torrents_to_cross_seed.add_torrent(torrent)
+        nb_per_category = len(torrents_to_cross_seed.find_torrents_with_category(_cat_name))
         torrents_nb += nb_per_category
-        logger.info(f"All torrents from category {_cat_name} have been searched")
-        logger.info(f"There are {nb_per_category} torrents in the {_cat_name} category that you can upload on other trackers")
-    logger.info(f"There are {torrents_nb} torrents you can upload on other trackers")
-    return torrents_per_trackers
+        searching_logger.info(f"All torrents from category {_cat_name} have been searched")
+        searching_logger.info(f"There are {nb_per_category} torrents in the {_cat_name} category that you can upload on other trackers")
+    searching_logger.info(f"There are {torrents_nb} torrents you can upload on other trackers")
+    return torrents_to_cross_seed
 
 
-def remove_torrents_already_cross_seeded(torrents: dict[str, dict[str, list[str]]], config: Config):
-    for _cat_name, _cat in torrents.items():
-        torrents_nb = len(_cat)
-        _torrents_to_remove = []
+def remove_torrents_already_cross_seeded(torrents: TorrentContainer, config: Config, cleaner_logger: SubLogger):
+    for _cat_name in config.categories:
+        _torrents_by_cat = torrents.find_torrents_with_category(_cat_name)
+        torrents_nb = len(_torrents_by_cat)
         _trackers_with_this_cat = [tracker_name for tracker_name, tracker in config.trackers.items() if _cat_name in tracker.categories]
-        for torrent_name, trackers in _cat.items():
-            if trackers == _trackers_with_this_cat:
-                _torrents_to_remove.append(torrent_name)
-        
-        for torrent_to_remove in _torrents_to_remove:
-            logger.debug(f"The torrent {torrent_to_remove} is already cross-seeded, removing it")
-            _cat.pop(torrent_to_remove)
-        logger.info(f"{torrents_nb - len(_cat)} torrents are already cross-seeded in {_cat_name}")
-    nb_of_torrents = sum([len(torrents_per_cat) for _cat_name, torrents_per_cat in torrents.items()])
-    logger.info(f"{nb_of_torrents} torrents remaining")
+        for torrent in _torrents_by_cat:
+            if torrent.trackers == _trackers_with_this_cat:
+                torrents.remove_torrent(torrent)
+                cleaner_logger.debug(f"The torrent {torrent.name} is already cross-seeded, removing it")
+        cleaner_logger.info(f"{torrents_nb - len(torrents.find_torrents_with_category(_cat_name))} torrents are already cross-seeded in {_cat_name}")
+    cleaner_logger.info(f"{len(torrents)} torrents remaining")
 
 
-def find_all_torrents(config: Config, torrent_clients: list[AbstractTorrentClient]):
-    torrents: dict[str, dict[str, list[str]]] = {}
+def find_all_torrents(config: Config, torrent_clients: list[AbstractTorrentClient], find_logger: SubLogger) -> TorrentContainer:
+    torrents = TorrentContainer()
     for torrent_client in torrent_clients:
-        torrents = torrents | torrent_client.get_torrents_using_config(config)
-    nb_of_torrents = sum([len(torrents_per_cat) for _cat_name, torrents_per_cat in torrents.items()])
-    logger.info(f"Found {nb_of_torrents} torrents in your clients")
+        torrents.merge(torrent_client.get_torrents_using_config(config))
+    find_logger.info(f"Found {len(torrents)} torrents in your clients")
     return torrents
 
 
@@ -128,20 +128,23 @@ if __name__ == '__main__':
         _indexer_manager_clients = create_indexer_manager_clients_from_config(_config)
         
         start_time = time.time()
-        _torrents = find_all_torrents(_config, _torrent_clients)
-        logger.info(f"Finding all torrents took {time.time() - start_time} seconds")
+        find_logger = logger.get_sub("FIND")
+        _torrents = find_all_torrents(_config, _torrent_clients, find_logger)
+        find_logger.info(f"Finding all torrents took {time.time() - start_time} seconds")
         
         start_time = time.time()
-        remove_torrents_already_cross_seeded(_torrents, _config)
-        logger.info(f"Filtering torrents took {time.time() - start_time} seconds")
-    
+        cleaner_logger = logger.get_sub("CLEANING")
+        remove_torrents_already_cross_seeded(_torrents, _config, cleaner_logger)
+        cleaner_logger.info(f"Filtering torrents took {time.time() - start_time} seconds")
+        
         start_time = time.time()
-        _torrents_to_pollinate = search_torrents_with_indexer_manager(_torrents, _config, _indexer_manager_clients)
-        logger.info(f"Searching torrents through indexer manager took {time.time() - start_time} seconds")
-    
+        searching_logger = logger.get_sub("INDEXER MANAGER SEARCH")
+        _torrents_to_pollinate = search_torrents_with_indexer_manager(_torrents, _config, _indexer_manager_clients, searching_logger)
+        searching_logger.info(f"Searching torrents through indexer manager took {time.time() - start_time} seconds")
+        
         write_file_result(_torrents_to_pollinate, _result_path)
     else:
         with open(_result_path, "r") as f:
-            _torrents_to_pollinate = json.load(f)
-            
+            _torrents_to_pollinate = TorrentContainer.from_dict(json.load(f))
+    
     display_torrents_per_trackers_in_beautiful_table(_torrents_to_pollinate)

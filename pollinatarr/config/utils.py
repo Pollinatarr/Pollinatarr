@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from typing import TYPE_CHECKING
 
 from pollinatarr.logger.log import logger
@@ -23,9 +22,10 @@ class MissingMandatoryPropertyException(Exception):
 
 
 def get_property_from_dict(dictionary: dict, property_name: str, default_value: any = None, mandatory: bool = False, depth: int = 0, log_value: bool = True):
+    reading_config_logger = logger.get_sub("CONFIG")
     _value = dictionary.get(property_name, default_value)
-    if not _value and mandatory:
-        logger.error(f"Property {property_name} is mandatory. Aborting")
+    if _value is None and mandatory:
+        reading_config_logger.error(f"Property {property_name} is mandatory. Aborting")
         raise MissingMandatoryPropertyException()
     if log_value:
         text_for_log = ""
@@ -35,5 +35,5 @@ def get_property_from_dict(dictionary: dict, property_name: str, default_value: 
             text_for_log += f"{property_name} ==> <PROTECTED_VALUE>"
         else:
             text_for_log += f"{property_name} ==> {_value}"
-        logger.info(text_for_log)
+        reading_config_logger.info(text_for_log)
     return _value

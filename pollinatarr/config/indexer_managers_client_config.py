@@ -25,7 +25,8 @@ class IndexerManagerClientConfig(object):
     
     @staticmethod
     def from_dict(client_name: str, _dict: dict):
-        logger.info(f"\t\tLoading indexer manager client {client_name} configuration")
+        reading_config_logger = logger.get_sub("CONFIG")
+        reading_config_logger.info(f"\t\tLoading indexer manager client {client_name} configuration")
 
 
 class ProwlarrClientConfig(IndexerManagerClientConfig):
