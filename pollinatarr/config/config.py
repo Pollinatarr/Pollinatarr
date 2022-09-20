@@ -31,7 +31,7 @@ class TrackerConfig(object):
         config = TrackerConfig()
         config.indexers = get_property_from_dict(_dict, "indexer_managers", mandatory=True, depth=2)
         config.categories = get_property_from_dict(_dict, "categories", default_value=[], mandatory=False, depth=2)
-        config.ignore_searching = get_property_from_dict(_dict, "ignore_searching", default_value=False, mandatory=False, depth=2, default_value=False)
+        config.ignore_searching = get_property_from_dict(_dict, "ignore_searching", mandatory=False, depth=2, default_value=False)
         return config
 
 
