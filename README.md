@@ -26,6 +26,11 @@ To run the script in an interactive terminal with a list of possible commands ru
 python Pollinatarr.py -h
 ```
 
+## Planned features
+-   Discord notification (to send the result)
+-   Docker installation
+-   Daemon mode (to run on schedule)
+
 Note: The tool will ask your indexer manager for every torrent that are not already cross seeding. The task can be very long
 
 ## Troubleshooting
