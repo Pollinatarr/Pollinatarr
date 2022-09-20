@@ -103,8 +103,8 @@ def get_result_file_path(result_path: str) -> str:
 
 
 if __name__ == '__main__':
-    if sys.version_info[0] != 3 or sys.version_info[1] < 10:
-        print("Version Error: Version: %s.%s.%s incompatible please use Python 3.10+" % (sys.version_info[0], sys.version_info[1], sys.version_info[2]))
+    if sys.version_info[0] != 3 or sys.version_info[1] < 9:
+        print("Version Error: Version: %s.%s.%s incompatible please use Python 3.9+" % (sys.version_info[0], sys.version_info[1], sys.version_info[2]))
         sys.exit(0)
     
     parser = argparse.ArgumentParser('uncross seed', description='Find the torrents you can share with you trackers')
