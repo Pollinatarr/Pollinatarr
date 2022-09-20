@@ -23,7 +23,7 @@ python -m pip install -r requirements.txt
 ## Usage
 To run the script in an interactive terminal with a list of possible commands run:
 ```bash
-python Pollinatarr.py -h
+python pollinatarr.py -h
 ```
 
 ## Planned features
