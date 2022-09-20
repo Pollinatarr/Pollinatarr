@@ -39,7 +39,7 @@ def search_torrents_with_indexer_manager(torrents: TorrentContainer, config: Con
     torrents_nb = 0
     for _cat_name in config.categories:
         searching_logger.info(f"Searching torrents in category {_cat_name}")
-        _trackers_with_this_cat = [(tracker_name, tracker) for tracker_name, tracker in config.trackers.items() if _cat_name in tracker.categories]
+        _trackers_with_this_cat = [(tracker_name, tracker) for tracker_name, tracker in config.trackers.items() if not tracker.categories or _cat_name in tracker.categories]
         _torrents_by_cat = torrents.find_torrents_with_category(_cat_name)
         for torrent in _torrents_by_cat:
             torrent_name = torrent.torrent_name.strip(".mkv")
