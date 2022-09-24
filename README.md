@@ -3,6 +3,13 @@
 `Pollinatarr` is an app designed to help you find which torrents are not available on certain trackers
 based on your existing torrents. It will only show you a list of releases name. You will have to upload torrents yourself.
 
+## Main features
+-   Get your torrents from torrent clients (qBittorrent and rTorrent available)
+-   Search your torrent through indexer manager (Prowlarr available)
+-   Sort the torrents per category
+-   Print a beautiful table containing non cross-seeded torrents to standard output
+-   Send notifications to Discord/Webhook
+
 ## Requirements
 
 -   [Python 3.10+](https://www.python.org/downloads/)
@@ -27,7 +34,6 @@ python pollinatarr.py -h
 ```
 
 ## Planned features
--   Discord notification (to send the result)
 -   Docker installation
 -   Daemon mode (to run on schedule)
 -   Automatic upload
