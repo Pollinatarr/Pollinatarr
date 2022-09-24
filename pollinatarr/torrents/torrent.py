@@ -32,6 +32,6 @@ class Torrent(object):
     
     @staticmethod
     def from_dict(_dict) -> Torrent:
-        torrent = Torrent(_dict.get("torrent_name"), _dict.get("category_name"))
+        torrent = Torrent(_dict.get("torrent_name"), _dict.get("category"))
         torrent.trackers = set(_dict.get("trackers"))
         return torrent

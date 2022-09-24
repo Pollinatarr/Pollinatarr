@@ -11,6 +11,7 @@ from pollinatarr.config.config import Config
 from pollinatarr.indexer_manager.abstract_indexer_manager import AbstractIndexerManager
 from pollinatarr.indexer_manager.indexer_manager_factory import create_indexer_manager_clients_from_config
 from pollinatarr.logger.log import setup_logger, logger, SubLogger
+from pollinatarr.notifier.notifiers_container import NotifiersContainer
 from pollinatarr.torrent_clients.abstract_torrent_client import AbstractTorrentClient
 from pollinatarr.torrent_clients.torrent_client_factory import create_torrents_client_from_config
 from pollinatarr.torrents.torrent import Torrent
@@ -34,7 +35,7 @@ def write_file_result(torrents: TorrentContainer, result_path: str):
     logger.info(f"Result correctly saved")
 
 
-def search_torrents_with_indexer_manager(torrents: TorrentContainer, config: Config, indexer_manager_clients: dict[str, AbstractIndexerManager], searching_logger: SubLogger) -> TorrentContainer:
+def search_torrents_with_indexer_manager(torrents: TorrentContainer, config: Config, indexer_manager_clients: dict[str, AbstractIndexerManager], searching_logger: SubLogger, wait_time: float) -> TorrentContainer:
     torrents_to_cross_seed = TorrentContainer()
     torrents_nb = 0
     for _cat_name in config.categories:
@@ -54,6 +55,7 @@ def search_torrents_with_indexer_manager(torrents: TorrentContainer, config: Con
                         break
                     else:
                         searching_logger.debug(f"{torrent_name} not found on tracker {tracker_name} with indexer manager {indexer_manager_wanted}")
+                    time.sleep(wait_time)
                 else:
                     existing_torrent = torrents_to_cross_seed.find_torrent_by_name(torrent.torrent_name)
                     if existing_torrent:
@@ -112,7 +114,7 @@ if __name__ == '__main__':
                         help='Choose config file path')
     parser.add_argument('-lf', '--log-file', dest='log_file', action='store', default='activity.log', type=str, help='Change you log file name', )
     parser.add_argument('-ll', '--log-level', dest='log_level', action="store", default='INFO', type=str, help='Change your log level.')
-    parser.add_argument('-wt', '--wait-time', dest='wait_time', action="store", default=2, type=int, help='Will set the waiting time between two request to Prowlarr')
+    parser.add_argument('-wt', '--wait-time', dest='wait_time', action="store", default=0.1, type=float, help='Will set the waiting time between two request to the indexer managers')
     parser.add_argument('-rf', '--result-file', dest='result_file', action="store", default='result.json', type=str, help='Change you result file name')
     parser.add_argument('-od', '--only-display', dest='only_display', action="store_true", help='Only display in a great table the result file (defined with -rf)')
     args = parser.parse_args()
@@ -121,30 +123,40 @@ if __name__ == '__main__':
     
     _result_path = get_result_file_path(args.result_file)
     
+    _config = Config.load_config(args.config_file)
+    _notifiers = NotifiersContainer()
+    _notifiers.create_notifiers_from_config(_config)
+    start_time = time.time()
+    _notifiers.run_start(start_time, "only display" if args.only_display else "complete")
+    torrent_find_time = None
+    searching_time = None
     if not args.only_display:
-        _config = Config.load_config(args.config_file)
         
         _torrent_clients = create_torrents_client_from_config(_config)
         _indexer_manager_clients = create_indexer_manager_clients_from_config(_config)
         
-        start_time = time.time()
+        tmp_start_time = time.time()
         find_logger = logger.get_sub("FIND")
         _torrents = find_all_torrents(_config, _torrent_clients, find_logger)
-        find_logger.info(f"Finding all torrents took {time.time() - start_time} seconds")
+        torrent_find_time = time.time() - tmp_start_time
+        find_logger.info(f"Finding all torrents took {torrent_find_time} seconds")
         
-        start_time = time.time()
+        tmp_start_time = time.time()
         cleaner_logger = logger.get_sub("CLEANING")
         remove_torrents_already_cross_seeded(_torrents, _config, cleaner_logger)
-        cleaner_logger.info(f"Filtering torrents took {time.time() - start_time} seconds")
+        cleaner_logger.info(f"Filtering torrents took {time.time() - tmp_start_time} seconds")
         
-        start_time = time.time()
-        searching_logger = logger.get_sub("INDEXER MANAGER SEARCH")
-        _torrents_to_pollinate = search_torrents_with_indexer_manager(_torrents, _config, _indexer_manager_clients, searching_logger)
-        searching_logger.info(f"Searching torrents through indexer manager took {time.time() - start_time} seconds")
+        tmp_start_time = time.time()
+        _searching_logger = logger.get_sub("INDEXER MANAGER SEARCH")
+        _torrents_to_pollinate = search_torrents_with_indexer_manager(_torrents, _config, _indexer_manager_clients, _searching_logger, args.wait_time)
+        searching_time = time.time() - tmp_start_time
+        _searching_logger.info(f"Searching torrents through indexer manager took {searching_time} seconds")
         
         write_file_result(_torrents_to_pollinate, _result_path)
     else:
         with open(_result_path, "r") as f:
             _torrents_to_pollinate = TorrentContainer.from_dict(json.load(f))
     
+    end_time = time.time()
+    _notifiers.run_end(start_time, end_time, _torrents_to_pollinate.to_dict(), args.only_display, torrent_find_time, searching_time)
     display_torrents_per_trackers_in_beautiful_table(_torrents_to_pollinate)

@@ -3,4 +3,5 @@ PyYAML~=6.0
 qbittorrent-api
 requests~=2.28.1
 prettytable~=3.3.0
+discord-webhook
 git+https://github.com/AthAshino/new-rtorrent-python.git

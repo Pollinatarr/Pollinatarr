@@ -53,3 +53,19 @@ trackers:
     categories:
         - Movies
         - TvShow
+
+notifiers:
+  # You can setup multiple notifiers (Discord or webhook for now)
+  discord:
+    # Discord notifications:
+    # Set value to a valid discord webhook URL
+    # Leave Empty/Blank to disable
+    run_start: None
+    run_end: https://my_discord_webhook.com/
+
+  webhook:
+    # Webhook notifications:
+    # Set value to a valid webhook URL
+    # Leave Empty/Blank to disable
+    run_start: https://my_webhook.com/
+    run_end: https://my_webhook.com/

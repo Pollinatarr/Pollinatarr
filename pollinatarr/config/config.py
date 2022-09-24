@@ -9,12 +9,27 @@ from typing import TYPE_CHECKING
 import yaml
 
 from pollinatarr.config.indexer_managers_client_config import IndexerManagerClientConfig, ProwlarrClientConfig, UnknownIndexerManager
+from pollinatarr.config.notifier_config import NotifierConfig, WebhookNotifierConfig, DiscordNotifierConfig, UnknownNotifier
 from pollinatarr.config.torrent_clients_config import TorrentClientConfig, qBittorrentClientConfig, UnknownTorrentClient, rTorrentClientConfig
 from pollinatarr.config.utils import DEFAULT_CONFIG_DIR_PATH, DEFAULT_CONFIG_FILE_NAME, BadConfigPathException, get_property_from_dict
 from pollinatarr.logger.log import logger
 
 if TYPE_CHECKING:
     from typing import Optional
+
+NOTIFIER_CONFIG_MAP = {
+    "discord": DiscordNotifierConfig,
+    "webhook": WebhookNotifierConfig
+}
+
+TORRENT_CLIENT_CONFIG_MAP = {
+    "qbittorrent": qBittorrentClientConfig,
+    "rTorrent"   : rTorrentClientConfig
+}
+
+INDEXER_MANAGER_CONFIG_MAP = {
+    "prowlarr": ProwlarrClientConfig
+}
 
 
 class TrackerConfig(object):
@@ -42,6 +57,7 @@ class Config(object):
         self.indexer_manager_clients: dict[str, IndexerManagerClientConfig] = {}
         self.categories: list[str] = []
         self.trackers: dict[str, TrackerConfig] = {}
+        self.notifiers: dict[str, Optional[NotifierConfig]] = {"discord": None, "webhook": None}
     
     
     @staticmethod
@@ -52,17 +68,24 @@ class Config(object):
         config.config_path = config_path
         config.categories = get_property_from_dict(_dict, "categories", mandatory=True, depth=1)
         
+        for _notifier_type, _notifier_dict in get_property_from_dict(_dict, "notifiers", mandatory=True, log_value=False).items():
+            _notifier_config = NOTIFIER_CONFIG_MAP.get(_notifier_type, None)
+            if _notifier_config:
+                config.notifiers[_notifier_type] = _notifier_config.from_dict(_notifier_dict, )
+            else:
+                raise UnknownNotifier(_notifier_type)
+        
         for _torrent_client_name, _torrent_client_dict in get_property_from_dict(_dict, "torrent_clients", mandatory=True, log_value=False).items():
-            if _torrent_client_name == "qbittorrent":
-                config.torrent_clients[_torrent_client_name] = qBittorrentClientConfig.from_dict(_torrent_client_name, _torrent_client_dict)
-            elif _torrent_client_name == "rTorrent":
-                config.torrent_clients[_torrent_client_name] = rTorrentClientConfig.from_dict(_torrent_client_name, _torrent_client_dict)
+            _torrent_client_config = TORRENT_CLIENT_CONFIG_MAP.get(_torrent_client_name, None)
+            if _torrent_client_config:
+                config.torrent_clients[_torrent_client_name] = _torrent_client_config.from_dict(_torrent_client_name, _torrent_client_dict)
             else:
                 raise UnknownTorrentClient(_torrent_client_name)
         
         for _indexer_manager_client_name, _indexer_manager_client_dict in get_property_from_dict(_dict, "indexer_managers", mandatory=True, log_value=False).items():
-            if _indexer_manager_client_name == "prowlarr":
-                config.indexer_manager_clients[_indexer_manager_client_name] = ProwlarrClientConfig.from_dict(_indexer_manager_client_name, _indexer_manager_client_dict)
+            _indexer_manager_config = INDEXER_MANAGER_CONFIG_MAP.get(_indexer_manager_client_name, None)
+            if _indexer_manager_config:
+                config.indexer_manager_clients[_indexer_manager_client_name] = _indexer_manager_config.from_dict(_indexer_manager_client_name, _indexer_manager_client_dict)
             else:
                 raise UnknownIndexerManager(_indexer_manager_client_name)
         
